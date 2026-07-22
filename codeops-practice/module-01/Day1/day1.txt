@@ -1,3 +1,0 @@
-Abdulkadir
-abdu=34
-bas="rfn"

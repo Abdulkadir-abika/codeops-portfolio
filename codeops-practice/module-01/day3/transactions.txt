@@ -1,8 +1,0 @@
-Abebe ,500.00
-Ahmed ,1200.50
-Abdu ,350.00
-Abebe ,150.25
-Ahmed ,450.00
-Dawit ,90.00
-Abdu ,850.00
-Dawit ,22.00
