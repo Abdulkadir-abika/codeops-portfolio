@@ -90,16 +90,15 @@ class AccountFactory:
         else:
             raise ValueError(f"Unknown account type: '{kind}'")
         
-if __name__ == "__main__":
-    acc1 = AccountFactory.create("savings", "riham", 2435451, 5000, rate=0.05)
-    acc2 = AccountFactory.create("current", "chala", 9988771, 500, overdraft=1000)
+acc1 = AccountFactory.create("savings", "riham", 2435451, 5000, rate=0.05)
+acc2 = AccountFactory.create("current", "chala", 9988771, 500, overdraft=1000)
 
-    sms_service = Smsalert("+251912345678")
-    acc1.subscribe(sms_service)
-    acc2.subscribe(sms_service)
+sms_service = Smsalert("+251912345678")
+acc1.subscribe(sms_service)
+acc2.subscribe(sms_service)
 
-    acc1.add_interest()
-    acc2.withdraw(1200)
+acc1.add_interest()
+acc2.withdraw(1200)
 
-    acc1.statement()
-    acc2.statement()
+acc1.statement()
+acc2.statement()

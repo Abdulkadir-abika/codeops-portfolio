@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
 
-
 class Alertobserver(ABC):
     @abstractmethod
     def update(self, message):
         pass
-
 
 class Smsalert(Alertobserver):
     def __init__(self, phone_number):
@@ -13,7 +11,6 @@ class Smsalert(Alertobserver):
 
     def update(self, message):
         print(f"SMS sent to {self.phone_number}: {message}")
-
 
 class AddisBankAccount:
     def __init__(self, Owner, acc_num, balance):
@@ -78,6 +75,13 @@ class AddisBankAccount:
         self._notify(msg)
         return last_tx
 
+    def total_transactions_recursive(self, history=None):
+        if history is None:
+            history = self.history_stack
+        if not history:
+            return 0
+        return history[0]["amount"] + self.total_transactions_recursive(history[1:])
+
     def statement(self):
         print(self.owner, ":", self._balance, "ETB")
 
@@ -130,47 +134,59 @@ class AccountFactory:
         else:
             raise ValueError(f"Unknown account type: '{kind}'")
 
+def binary_search(items, target):
+    lo, hi = 0, len(items) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if items[mid] == target:
+            return mid
+        elif items[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
+
 
 class AccountRegistry:
     def __init__(self):
-        self.accounts = {}
+        self.by_number = {}
 
     def add(self, account: AddisBankAccount):
-        if account.acc_num in self.accounts:
+        if account.acc_num in self.by_number:
             raise ValueError(f"Account number {account.acc_num} already exists.")
-        self.accounts[account.acc_num] = account
+        self.by_number[account.acc_num] = account
 
-    def find(self, acc_num) -> AddisBankAccount:
-        return self.accounts.get(acc_num, None)
+    def top_by_balance(self, n=5):
+        accts = sorted(self.by_number.values(), key=lambda a: a.balance, reverse=True)
+        return accts[:n]
 
-    def list_all(self) -> list:
-        return list(self.accounts.values())
+    def find_by_number(self, number):
+        nums = sorted(self.by_number.keys())
+        i = binary_search(nums, number)
+        return self.by_number[nums[i]] if i >= 0 else None
 
+    def total_transactions(self, number):
+        account = self.find_by_number(number)
+        if account:
+            return account.total_transactions_recursive()
+        return 0
+    
 registry = AccountRegistry()
-
 acc1 = AccountFactory.create("savings", "riham", 2435451, 5000, rate=0.05)
-acc2 = AccountFactory.create("current", "abdu", 9988771, 500, overdraft=1000)
-
-sms_service = Smsalert("+251912345678")
-acc1.subscribe(sms_service)
+acc2 = AccountFactory.create("current", "chala", 9988771, 500, overdraft=1000)
+acc3 = AccountFactory.create("savings", "abdu", 1122334, 12000, rate=0.05)
 
 registry.add(acc1)
 registry.add(acc2)
+registry.add(acc3)
 
-found = registry.find(2435451)
-print(f"[O(1) Find Result] Owner: {found.owner}, Balance: {found.balance} ETB ")
-
-    
-for acc in registry.list_all():
+for acc in registry.top_by_balance(2):
     acc.statement()
-print()
+found = registry.find_by_number(2435451)
+if found:
+    print(f"Found: {found.owner}, Balance: {found.balance} ETB")
 
 found.deposit(1000)
-found.withdraw(300)
-print(f"Current Balance: {found.balance} ETB\n")
-
-found.undo_last()
-print(f"Balance after 1st undo: {found.balance} ETB")
-
-found.undo_last()
-print(f"Balance after 2nd undo: {found.balance} ETB")
+found.withdraw(200)
+total_val = registry.total_transactions(2435451)
+print(f"Total transaction amount for {found.owner}: {total_val} ETB")
